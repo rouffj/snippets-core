@@ -49,10 +49,13 @@ $ maker make
 ```
 
 ---
+# FAQ
 
-You want to create and use your own snippets for your project?
+## You want to create and use your own snippets for your project?
 
+```
 $ maker make -m
 
  Snippet to execute?:
   [0] my_project:my_snippet
+```
