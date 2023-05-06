@@ -1,0 +1,57 @@
+### src/Form/{{ formClass }}.php ###
+<?php
+
+namespace App\Form;
+
+{% if entityName %}
+use App\Entity\{{ entityName }};
+{% endif %}
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\Extension\Core\Type as Type;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+class {{ formClass }} extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder
+{% for name in fieldNames %}
+            ->add('{{ name }}', Type\{{ fieldTypes[loop.index0] }}::class)
+{% endfor %}
+        ;
+    }
+
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults([
+{% if entityName %}
+            'data_class' => User::class,
+{% endif %}
+        ]);
+    }
+}
+### inside controller ###
+use App\Form\{{ formClass }};
+
+//...
+
+        $form = $this->createForm({{ formClass }}::class);
+
+        if ($form->handleRequest($request)->isSubmitted() && $form->isValid()) {
+            $entity = $form->getData();
+            // TODO: Your entity is ready to be inserted into DB
+        }
+
+### inside template ###
+{# @TODO replace '{(' by '{{' #}
+{% verbatim %}
+{{ form_errors(form) }}
+{{ form_start(form, {attr: {novalidate: ''}}) }}{% endverbatim %}
+{% for field in fieldNames %}
+    {( form_row(form.{{ field }}) )}
+{% endfor %}
+{% verbatim -%}
+{{ form_rest(form) }}
+{{ form_end(form) }}
+{%- endverbatim %}

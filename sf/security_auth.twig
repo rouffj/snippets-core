@@ -1,0 +1,76 @@
+security:
+    password_hashers:
+        {{ entity }}:
+            algorithm: auto
+
+    providers:
+        # User providers (DB, API...)
+        app_user_provider:
+            entity:
+                class: {{ entity }}
+                property: {{ entityLoginProperty }}
+
+    firewalls:
+        main:
+            lazy: true
+            provider: app_user_provider
+{% if logout_activated %}
+            logout:
+                path: /logout
+{% endif %}
+{% if 'form' == auth_provider %}
+            form_login:
+                provider: app_user_provider
+                username_parameter: _email # login form field name
+                password_parameter: _password # password form field name
+                default_target_path: /?login=success # on success path
+{% endif %}
+
+### src/Controller/SecurityController.php ###
+
+{% if logout_activated %}
+    /**
+    * @Route("/logout", name="logout")
+    */
+    public function logout(): Response
+    {
+        throw new \LogicException('Url needed by the security component');
+    }
+{% endif %}
+
+    /**
+    * @Route("/login_check", name="login_check")
+    */
+    public function loginCheck(): Response
+    {
+        throw new \LogicException('Url needed by the security component');
+    }
+
+{% if 'form' == auth_provider %}
+    /**
+     * @Route("/login", name="login")
+     */
+    public function login(AuthenticationUtils $authenticationUtils): Response
+    {
+        // get the login error if there is one
+        $loginError = $authenticationUtils->getLastAuthenticationError();
+        // last username entered by the user
+        $lastUsername = $authenticationUtils->getLastUsername();
+
+        return $this->render('security/login.html.twig', ['last_username' => $lastUsername, 'login_error' => $loginError]);
+    }
+
+### src/security/login.html.twig ###
+
+{% verbatim -%}
+{% if login_error %}
+    <div class="alert alert-warning">{{ login_error.message }}</div>
+{% endif %}
+<form action="/login_check">
+    <input typ="text" name="_email" value="{{ last_username }}"/>
+    <input typ="text" name="_password"/>
+
+    <input type="submit" value="Login" />
+</form>
+{% endverbatim %}
+{% endif %}

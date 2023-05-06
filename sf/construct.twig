@@ -1,0 +1,21 @@
+{%- for parameter in parameters %}
+use {{ parameter }};
+{% endfor %}
+
+{% for parameter in parameters %}
+    /**
+     * @var {{ parameter|get_class }}
+     */
+    private ${{ parameter|get_class|class_to_variable }};
+
+{% endfor %}
+
+    public function __construct(
+{%- for parameter in parameters -%}
+        {{ parameter|get_class }} ${{ parameter|get_class|class_to_variable }}{%- if not loop.last -%}, {% endif %}
+{%- endfor -%})
+    {
+{% for parameter in parameters %}
+        $this->{{ parameter|get_class|class_to_variable }} = ${{ parameter|get_class|class_to_variable }};
+{% endfor %}
+    }

@@ -1,0 +1,30 @@
+{% set listenerNamespace = {
+    'security.interactive_login': 'Symfony\\Component\\Security\\Http\\Event\\InteractiveLoginEvent'
+    ''
+}
+%}
+
+## Add into src/EventListener/{{ className }}.php ##
+
+<?php
+
+namespace App\EventListener;
+
+
+use {{ listenerNamespace[eventName] }};
+
+class {{ className }}
+{
+    public function onEvent({{ listenerNamespace[eventName]|split('\\')|last }} $event)
+    {
+        dump('onLoginSuccess', $event);
+    }
+}
+
+## Add into config/services.yml ##
+
+services:
+    #...
+    App\EventListener\{{ className }}:
+        tags:
+        - { name: kernel.event_listener, event: {{ eventName }}, method: onEvent }

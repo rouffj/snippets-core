@@ -1,0 +1,193 @@
+### to execute ###
+
+  # Install Behat + a behat extension allowing behat context classes to inject them Symfony Services 
+$ composer install friends-of-behat/symfony-extension behat --env=test
+  # The dama/doctrine-test-bundle rollbacks any DB changes made during each scenario to keep DB state clean  
+$ composer install dama/doctrine-test-bundle --env=test
+
+### ./behat.yml.dist ###
+
+default:
+    suites:
+        default:
+            contexts:
+                - Tests\Behat\WebContext
+
+    extensions:
+        # This behat extension allows behat context classes to inject them Symfony Services 
+        FriendsOfBehat\SymfonyExtension:
+            bootstrap: tests/bootstrap.php
+            kernel:
+                class: ~
+                path: ~
+                environment: ~
+                debug: ~
+        # The dama/doctrine-test-bundle rollbacks any DB changes made during each scenario to keep DB state clean (uncomment it to activate)
+        #DAMA\DoctrineTestBundle\Behat\ServiceContainer\DoctrineExtension: ~
+
+### features/basic.feature ###
+# Want to know which sentences you can use in your features? Execute this command: `vendor/bin/behat --definitions l`
+# http://behat.org/en/latest/quick_start.html
+
+Feature:
+    Basic scenarios for Anaxago.
+
+    Scenario: I check main pages
+        When I visit "/"
+        Then a "h1" with text "Offrez-vous les performances de la gestion privée" is shown
+
+### src/Test/Behat/WebContext.php ###
+<?php declare(strict_types=1);
+
+namespace App\Tests\Behat;
+
+use Behat\Behat\Context\Context;
+use Behat\Gherkin\Node\TableNode;
+use PHPUnit\Framework\Assert;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+
+/**
+ * Here should be defined web related actions (click, visit...).
+ */
+final class WebContext implements Context
+{
+    /**
+     * @var KernelBrowser
+     */
+    private KernelBrowser $client;
+
+    /**
+     * This Context is a Symfony Service so you can inject and execute any Symfony services you want behind the behat sentences. 
+     */
+    public function __construct(KernelBrowser $client)
+    {
+        $this->client = $client;
+    }
+
+    /**
+     * @When I visit :path
+     * @When I visit :path with headers:
+     */
+    public function iVisitAPath(string $path, TableNode $table = null): void
+    {
+        $headers = [];
+        if ($table) {
+            foreach ($table->getRows() as $line) {
+                $headers['HTTP_'.$line[0]] = $line[1];
+            }
+        }
+
+        $this->client->request('GET', $path, server: $headers);
+    }
+
+    /**
+     * @When I filter elements with css selector ":cssSelector"
+     */
+    public function iFilterElementsWithCssSelector($cssSelector)
+    {
+        $this->client->getCrawler()->filter($cssSelector);
+    }
+
+    /**
+     * @When I click on link :link
+     */
+    public function iClickOnLink($link)
+    {
+        $this->client->followRedirects();
+        $this->client->clickLink($link);
+    }
+
+    /**
+     * @When I fill form with button :buttonLabel with fields:
+     */
+    public function iFillFormWithButton($buttonLabel, TableNode $table)
+    {
+        $this->client->followRedirects();
+        $form = $this->client->getCrawler()->selectButton($buttonLabel)->form();
+
+        $fields = [];
+        foreach ($table->getRows() as $row) {
+            if (false !== strpos($row[1], '/')) {
+                // check if the field value is a file path?
+                $form[$row[0]]->upload(__DIR__.'/../../web'.$row[1]);
+            } else {
+                $form[$row[0]] = $row[1];
+            }
+        }
+
+        $this->client->submit($form);
+    }
+
+    /**
+     * @Then a :cssSelector with text :text is shown
+     * @Then a :cssSelector at position :position with text :text is shown
+     */
+    public function theResponseShouldBeReceived(string $cssSelector, string $text, $position = null): void
+    {
+        if ($this->client->getResponse()->getStatusCode() >= 500) {
+            print_r($this->client->getCrawler()->text(null, false));
+        }
+
+        Assert::assertEquals(200, $this->client->getResponse()->getStatusCode());
+
+        if (!$position) {
+            Assert::assertCount(1, $selectedElement = $this->client->getCrawler()->filter($cssSelector), 'Be more specific on css element to select just one element (see: https://www.w3schools.com/cssref/css_selectors.php)');
+        } else {
+            Assert::assertCount(1, $selectedElement = $this->client->getCrawler()->filter($cssSelector)->eq((int) $position));
+        }
+
+        Assert::assertStringContainsString($text, $selectedElement->text());
+    }
+
+    /**
+     * @Then the response headers should not contain:
+     */
+    public function theResponseHeadersShouldNotContain(TableNode $table)
+    {
+        foreach ($table->getRows() as $row) {
+            Assert::assertFalse($this->client->getResponse()->headers->has($row[0]));
+        }
+    }
+
+    /**
+     * @Then the response headers should contain:
+     */
+    public function theResponseHeadersShouldContain(TableNode $table)
+    {
+        foreach ($table->getRows() as $row) {
+            $header = $this->client->getResponse()->headers->get($row[0]);
+            Assert::assertNotNull($header, 'the header '.$row[0].' should be present');
+            Assert::assertEquals($row[1], $header);
+        }
+    }
+
+    /**
+     * @Then the response status is :statusCode
+     */
+    public function theVisitedPageHasStatusCode($statusCode)
+    {
+        Assert::assertEquals($statusCode, $this->client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @Given I am connected as :userEmail
+     */
+    /*
+    public function iAmConnectedAs($userEmail)
+    {
+        $container = $this->client->getContainer();
+        $userRepository = $container->get(EntityManagerInterface::class)->getRepository(User::class);
+        $user = $userRepository->findOneBy(['email' => $userEmail]);
+        $this->client->loginUser($user, 'user');
+    }
+    */
+
+    /**
+     * @When save the page in :page
+     */
+    public function saveThePageIn($page)
+    {
+        file_put_contents(__DIR__.'/../../'.$page, $this->client->getResponse()->getContent());
+    }
+}
+

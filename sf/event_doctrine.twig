@@ -1,0 +1,25 @@
+### src/EventListener/{{ className }}.php ###
+<?php
+
+namespace App\EventListener;
+
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+
+class {{ className }}
+{
+    public function {{ eventName }}({{ entityName }} ${{ entityName|class_to_variable }}, LifecycleEventArgs $event): void
+    {
+        // Put your logic here before or after a DB change occured inside an entity like:
+        // - Log column change
+        // - Send a notification / email each time an entity is added into DB
+        // - ...
+    }
+}
+
+### config/services.yaml ###
+
+services:
+    #...
+    App\EventListener\{{ className }}:
+        tags:
+        - { name: 'doctrine.orm.entity_listener', event: '{{ eventName }}', entity: 'App\Entity\{{ entityName }}' }

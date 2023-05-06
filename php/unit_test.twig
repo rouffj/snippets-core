@@ -1,0 +1,14 @@
+### {{ classPath }}
+<?php
+
+namespace {{ classPath|get_namespace }};
+
+use PHPUnit\Framework\TestCase;
+
+class {{ classPath|get_namespace|get_class }} extends TestCase
+{
+    public function testMethod()
+    {
+        $this->assertEquals(true, false, 'This assertion should be replaced');
+    }
+}

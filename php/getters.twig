@@ -1,0 +1,39 @@
+{% if generate_validation %}
+use Symfony\Component\Validator\Constraints as Assert;
+{% endif %}
+{% if generate_doctrine_mapping %}
+use Doctrine\ORM\Mapping as ORM;
+{% endif %}
+
+{% for i, property in property_names %}
+    /**
+     * @var {{ property_types[i] }}
+     *
+{% if generate_doctrine_mapping %}
+     * @ORM\Column(type="{{ property_types[i] }}")
+{% endif %}
+{% if generate_validation %}
+     * @Assert\NotBlank()
+     * @Assert\Type("{{ property_types[i] }}")
+{% endif %}
+     */
+    private ${{ property }};
+
+{% endfor %}
+
+{% for i, property in property_names %}
+    public function get{{ property|capitalize }}(): ?{{ property_types[i] }}
+    {
+        return $this->{{ property }};
+    }
+
+{% if 'yes' == generate_setters %}
+    public function set{{ property|capitalize }}({{ property_types[i] }} ${{ property }}): self
+    {
+        $this->{{ property }} = ${{ property }};
+
+        return $this;
+    }
+{% endif %}
+
+{% endfor %}

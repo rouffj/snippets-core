@@ -1,0 +1,10 @@
+{% if 'doctrine' == type %}
+    {%- set alias = "@ORM\\" ~ name %}
+{% elseif 'validator' == type %}
+    {%- set alias = '@Assert\\' ~ name %}
+{% else %}
+    {%- set alias = '@' ~ name %}
+{% endif %}
+/**
+ * {{ alias }}({% for option in options %}{{ option }}=""{% if not loop.last %}, {% endif %}{% endfor %})
+ */

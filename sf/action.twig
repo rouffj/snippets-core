@@ -1,0 +1,15 @@
+### src/Controller/{{ controllerName }}Controller.php ###
+    /**
+     * @Route("/{{ controllerName|lower }}/{{ actionName|lower }}", name="{{controllerName|lower}}_{{ actionName|lower }}")
+     */
+    public function {{ actionName }}(Request $request)
+    {
+        return $this->render('{{ controllerName|lower }}/{{ actionName }}.html.twig', []);
+    }
+
+### templates/{{controllerName|lower}}/{{ actionName }}.html.twig ###
+{% verbatim %}{% extends "base.html.twig" %}{% endverbatim %}
+
+{% verbatim %}{% block content %}{% endverbatim %}
+    <h2>{{ actionName|lower }} {{controllerName}}</h2>
+{% verbatim %}{% endblock %}{% endverbatim %}

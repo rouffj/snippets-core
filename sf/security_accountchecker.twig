@@ -1,0 +1,78 @@
+{% set accountChecks = {
+    'account_validation_not_done': {'userMethod': 'isAccountValidated', 'message': 'Your have not validated your account.'},
+    'trial_period_ended': {'userMethod': 'isTrialVersionExpired', 'message': 'You cannot access your account because your trial version is finished.'},
+    'expired_credit_card': {'userMethod': 'isCreditCardExpired', 'message': 'You cannot access your account because your credit card expired.'},
+    'account_locked': {'userMethod': 'isAccountLocked', 'message': 'You cannot access your account because it has been locked temporarly by our team.'},
+    'credentials_expired': {'userMethod': 'isCredentialsExpired', 'message': 'You cannot access your account because your credentials expired.'},
+    'account_validated': {'userMethod': 'isAccountValidated', 'message': 'You cannot access your account because our team has not validated you account yet.'},
+} %}
+### src/Security/AccountChecker.php
+<?php
+
+namespace App\Security;
+
+use App\Entity\{{ userEntity }};
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAccountStatusException;
+use Symfony\Component\Security\Core\User\UserCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+{% if 'no' == disableAuthentication %}
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+{% endif %}
+
+/**
+ * You can disable the access to the account by using "throw new CustomUserMessageAccountStatusException('Message displayed to the user as login error')".
+ * Or you can allow access but display a message (via FlashMessage) to the user just after the connection to its account.
+ * (eg. trial version will expire soon, credit card expire soon, limits of the account reached soon...).
+ */
+class UserChecker implements UserCheckerInterface
+{
+    {%- if 'no' == disableAuthentication ~%}
+    /**
+     * @var FlashBagInterface
+     */
+    private $flashBag;
+
+    public function __construct(FlashBagInterface $flashBag)
+    {
+        $this->flashBag = $flashBag;
+    }
+    {%~ endif %}
+
+    /**
+     * Method executed after User found from the database but before password checking. Valid username but cannot be sure it is the real user.
+     */
+    public function checkPreAuth(UserInterface $user): void
+    {
+        if (!$user instanceof {{ userEntity }}) {
+            return;
+        }
+    }
+
+    /**
+     * Method executed after User found from the database AND after password checking. Valid username + valid password: you can be sure it is the real user.
+     */
+    public function checkPostAuth(UserInterface $user): void
+    {
+        if (!$user instanceof {{ userEntity }}) {
+            return;
+        }
+
+        if ($user->{{ accountChecks[accountCheck].userMethod }}()) {
+        {%- if 'yes' == disableAuthentication ~%}
+            // the message passed to this exception is meant to be displayed to the user
+            throw new CustomUserMessageAccountStatusException('{{ accountChecks[accountCheck].message }}');
+        {% else ~%}
+            $this->flashBag->add('error', '{{ accountChecks[accountCheck].message }}');
+        {% endif -%}
+        }
+    }
+}
+
+### config/packages/security.yaml
+
+# ...
+security:
+    firewalls:
+        main:
+            #...
+            user_checker: App\Security\UserChecker

@@ -1,0 +1,199 @@
+php:
+  getters:
+    #help: Generate a getter/setter for a given property
+    property_names:
+      q: Name of the property to create?
+      repeat: true
+    property_types:
+      q: Its type?
+      values: [string, array, int, \DateTime, float, bool]
+      repeat: true
+    generate_setters:
+      q: Generate setters for properties?
+      default: yes
+      values: [yes, no]
+    generate_validation:
+      q: Generate basic validators?
+      default: yes
+      values: [yes, no]
+    generate_doctrine_mapping:
+      q: Generate doctrine mapping on properties?
+      default: yes
+      values: [yes, no]
+      help: |
+        To learn more about accepted annotation values see:
+
+        - Doctrine: https://www.doctrine-project.org/projects/doctrine-orm/en/2.9/reference/annotations-reference.html
+        - Validator: https://symfony.com/doc/current/reference/constraints.html#supported-constraints
+  unit_test:
+    classPath:
+      q: Test file to create?
+      values: [tests/MyClassTest.php]
+
+sf:
+  validator:
+    constraintName:
+      q: Name of the custom validator (<fg=yellow>IsValidPassword...</>)?
+    options:
+      q: Name of the argument the annotation can accept?
+      repeat: true
+    optionsDefaultValue:
+      q: What is the default value of the related argument (eg. a bool, a string...)?
+      repeat: true
+  twig_theme: ~
+  annotation:
+    #help: Allow autocompletion on all existing annotations
+    type:
+      q: What kind of annotation you want?
+      values: [doctrine, validator, routing]
+      default: doctrine
+      help: |
+        To learn more about accepted annotation values see:
+
+        - Doctrine: https://www.doctrine-project.org/projects/doctrine-orm/en/2.9/reference/annotations-reference.html
+        - Validator: https://symfony.com/doc/current/reference/constraints.html#supported-constraints
+        - Routing: https://symfony.com/doc/current/routing.html#route-parameters
+    name:
+      q: Which annotation to use?
+      values_from:
+        class: Maker\Autocompleter\AnnotationAutocompleter
+        parameters: []
+    options:
+      q: Which annotation option?
+      repeat: true
+      values_from:
+        class: Maker\Autocompleter\AnnotationOptionsAutocompleter
+        parameters: []
+  form:
+    formClass:
+      q: Name of the FormClass to create (eg. UserType)?
+    entityName:
+      q: What is the entity related to this Form? (If no entity related, press enter)
+      values_from:
+        class: Maker\Autocompleter\FileAutocompleter
+        parameters: [src/Entity/*.php]
+    fieldNames:
+      q: Field name to add?
+      repeat: true
+    fieldTypes:
+      q: Type of the previous fields?
+      repeat: true
+      values_from:
+        class: Maker\Autocompleter\FileAutocompleter
+        parameters: [vendor/symfony/form/Extension/Core/Type/*Type.php]
+  construct:
+    parameters:
+      q: Parameter type
+      repeat: true
+      values_from:
+        class: Maker\Autocompleter\ServiceAutocompleter
+        parameters: [var/cache/dev/App_KernelDevDebugContainer.xml]
+        full_search: ~ # Will search inside any part of the autocompleter (begin, end, middle...). Otherwise Symfony autocompletion accepts only search on cursor position.
+  event_custom:
+    eventName:
+      q: What is the name of your custom event
+      default: user_registered
+    eventClassName:
+      q: What is the name of your Event class?
+      default: UserRegisteredEvent
+    methodName:
+      q: In which method you want to dispatch the event?
+    params:
+      q: Which class your listeners could use (eg. App\Entity\User)?
+      repeat: true
+      values_from:
+        class: Maker\Autocompleter\FileAutocompleter
+        parameters: [src/Entity/*.php, with_namespace]
+  event_symfony:
+    className:
+      q: Name of the listener class?
+    eventName:
+      q: Which event this listener should subscribe?
+      values: [kernel.controller, kernel.request, kernel.response, security.interactive_login]
+  event_doctrine:
+    className:
+      q: Name of the doctrine listener class (eg. <fg=yellow>UserListener</>)?
+    entityName:
+      q: Which entity you want to listen to?
+      values_from:
+        class: Maker\Autocompleter\FileAutocompleter
+        parameters: [src/Entity/*.php]
+    eventName:
+      q: Doctrine Event to subscribe to?
+      values: ['prePersist', 'postPersist', 'preUpdate', 'postUpdate', 'preRemove', 'postRemove']
+      help: |
+        # Which doctrine event should I use?
+
+        See comments above each event name here: https://github.com/doctrine/orm/blob/2.9.x/lib/Doctrine/ORM/Events.php
+        
+  security_auth:
+    entity:
+      q: "What is your User entity?"
+      default: App\Entity\User
+    entityLoginProperty:
+      q: "What is the property from this entity used for login?"
+      default: email
+    logout_activated:
+      q: "Your users should be able to logout?"
+      default: yes
+    auth_provider:
+      q: How the user should be authenticated?
+      values: ['form', 'custom']
+
+  security_passwordless:
+    newSecurityActivated:
+      q: "Check in your security.yaml if security.enable_authenticator_manager is true"
+      values: [yes, no]
+    userRepository:
+      q: Full namespace of your user repository?
+      default: App\Repository\UserRepository
+  security_accountchecker:
+    userEntity:
+      q: "Your user entity?"
+      values: [User]
+    accountCheck:
+      q: Which account check you want to do during user login?
+      values: [account_validation_not_done, trial_period_ended, expired_credit_card, account_deleted, account_expired, account_locked, credentials_expired, account_validated]
+    disableAuthentication:
+      q: Disable authentication for those accounts (if no, a notification will be shown after authentication success)?
+      default: yes
+      values: [no, yes]
+
+  action:
+    controllerName:
+      q: Name of the Controller (without suffix)?
+    actionName:
+      q: Name of the controller action?
+  action_advanced:
+    controllerName:
+      q: Name of the Controller file?
+    actionName:
+      q: Name of the controller action?
+    requirements:
+      q: 'Which constraints you want to add to route placeholders?'
+      default: '{"id": "\d+"}'
+    methods:
+      q: 'The action can be called by which HTTP methods ?'
+      default: '{"GET"}'
+  console_app:
+    command_name:
+      q: How do you want to name your command like any unix command (my_find, my_ls...)?
+refacto:
+  extract_to_method:
+    methodName:
+      q: Name of the method?
+    methodVisibility:
+      q: Visibility of the method?
+      values: [public, protected, private]
+  extract_to_class:
+    classPath:
+      q: What is the class location where you want to move the copied code?
+      default: src/MyClass.php
+    methodName:
+      q: What is the method name?
+  tpl_to_macro:
+    macroName:
+      q: Name of the macro to create?
+  tpl_to_include:
+    templateToIncludePath:
+      q: Path to the twig include file?

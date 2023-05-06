@@ -1,0 +1,66 @@
+### src/Event/AppDomainEvents.php ###
+<?php
+
+namespace App\Event;
+
+/**
+ * Centralize all Business events thrown by the App.
+ */
+final class AppDomainEvents
+{
+  //...
+
+  /**
+   * @Event("App\Event\{{ eventClassName }}")
+   */
+  public const {{eventName|upper}} = 'app.{{ eventName }}';
+
+  //...
+}
+
+### src/Event/{{ eventClassName }}.php ###
+<?php
+
+namespace App\Event;
+
+use Symfony\Contracts\EventDispatcher\Event;
+{% for param in params %}
+use {{ param }};
+{% endfor %}
+
+class {{ eventClassName }} extends Event
+{
+{% for param in params %}
+{% set var = param|get_class|class_to_variable %}
+    private {{ param|get_class }} ${{var}};
+{% endfor %}
+
+    public function __construct({% for param in params %}{{ param|get_class }} ${{ param|get_class|class_to_variable }}{% if not loop.last %}, {% endif %}{% endfor %})
+    {
+{% for param in params %}
+{% set var = param|get_class|class_to_variable %}
+        $this->{{var}} = ${{ var }};
+{% endfor %}
+    }
+
+{% for param in params %}
+{% set var = param|get_class|class_to_variable %}
+    public function get{{param|get_class}}(): {{ param|get_class}}
+    {
+        return $this->{{var}};
+    }
+
+{% endfor %}
+}
+
+### In your code ###
+<?php
+
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use App\Event\{{ eventClassName }};
+use App\Event\AppDomainEvents;
+
+    public function {{ methodName }}(EventDispatcherInterface $eventDispatcher)
+    {
+        $eventDispatcher->dispatch(new {{ eventClassName }}({% for param in params %}${{ param|get_class|class_to_variable }}{% if not loop.last %}, {% endif %}{% endfor %}), AppDomainEvents::{{ eventName|upper }});
+    }

@@ -1,0 +1,15 @@
+### Append into template/macros.html.twig ###
+
+{% verbatim %}{# TODO replace ({ }) by {{ }} #}{% endverbatim %}
+(% macro {{ macroName }}() %)
+    {{~ ''|clipboard_paste|raw }}
+{% verbatim %}{% endmacro %}{% endverbatim %}
+
+### opened template ###
+
+{% verbatim %}{% import 'macros.html.twig' as macros %}{% endverbatim %}
+
+{# ... #}
+
+{% verbatim %}{# TODO replace ({ }) by {{ }} #}{% endverbatim %}
+(% macros.{{macroName}}() %)

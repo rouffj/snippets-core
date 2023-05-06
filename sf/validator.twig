@@ -1,0 +1,71 @@
+### src/Validator/{{ constraintName }}.php  ###
+<?php
+
+namespace App\Validator;
+
+use Symfony\Component\Validator\Constraint;
+
+/**
+ * @Annotation
+ */
+class {{ constraintName }} extends Constraint
+{
+    // @TODO You can change the default message
+{% verbatim %}
+    public $message = 'This value {{ value }} is invalid';
+{% endverbatim %}
+
+{% for option in options -%}
+{% if loop.first %}
+    // List of arguments available when using the annotation
+{% endif %}
+    public ${{ option }} = {{ optionsDefaultValue[loop.index0] }};
+{% endfor %}
+
+    public function getTargets()
+    {
+        return [Constraint::PROPERTY_CONSTRAINT];
+    }
+}
+
+### src/Validator/{{ constraintName }}Validator.php ###
+<?php
+
+namespace App\Validator;
+
+use Symfony\Component\Validator\Constraint;
+use Symfony\Component\Validator\ConstraintValidator;
+use Symfony\Component\Validator\Exception\UnexpectedTypeException;
+use Symfony\Component\Validator\Exception\UnexpectedValueException;
+
+class {{ constraintName }}Validator extends ConstraintValidator
+{
+    public function validate($value, Constraint $constraint)
+    {
+        if (!$constraint instanceof {{ constraintName }}) {
+            throw new UnexpectedTypeException($constraint, {{ constraintName }}::class);
+        }
+
+        if (null === $value || '' === $value) {
+            return;
+        }
+
+        $invalidValue = false;
+{% for option in options %}
+        if ('...' === $constraint->{{ option }}) {
+            // @TODO put here the validation login
+            //$invalidValue = true;
+        }
+{% else %}
+            // @TODO put here the validation login
+            //$invalidValue = true;
+{% endfor %}
+
+        if ($invalidValue) {
+            $this->context->buildViolation($constraint->message)
+                ->setParameter('{% verbatim %}{{ value }}{% endverbatim %}', $value)
+                //->atPath('email')
+                ->addViolation();
+        }
+    }
+}
